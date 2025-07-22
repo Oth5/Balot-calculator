@@ -11,7 +11,8 @@ lhmOutput.innerHTML=totallhm+"<br>----<br>";
 buttonSgl.addEventListener("click",()=>{
 var lna=parseInt(lnaInput.value)||0;
 var lhm=parseInt(lhmInput.value)||0;
-
+lnaInput.value="";
+lhmInput.value="";
 totallna+= lna;
 totallhm+=lhm;
  localStorage.setItem("lna",totallna);
