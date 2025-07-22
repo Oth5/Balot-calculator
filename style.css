@@ -84,27 +84,21 @@ h2{
 }
 
    @media(max-width:600px)  {
-    .balot-calculator{
-          align-items: center;
+ 
+  
+
+  .output {
+    align-items: center;
     gap: 20px;
+  }
 
-    }
-    .output {
-  display: flex;
-  justify-content: center;
-  gap: 30px;
-  margin-top: 20px;
-}
+  .team {
+    width: 30vw;
+    height: 35vh;
+  }
 
-.team {
-  background-color: #363669;
-  color: white;
-  height: 50vh;
-  border-radius: 10px;
-  padding: 10px;
-  font-size: 22px;
-  text-align: center;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.4);
-  overflow-y: auto;
-   }
+  .balot-calculator {
+    gap: 10px;
+  }
+
   }
