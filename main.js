@@ -3,8 +3,10 @@ var lhmInput = document.getElementById("lhm");
 var lnaOutput= document.getElementById("lnaoutput");
 var lhmOutput= document.getElementById("lhmoutput");
 var buttonSgl= document.getElementById("sgl")
-var totallna=0;
-var totallhm=0;
+var totallna = parseInt(localStorage.getItem("lna")) || 0;
+var totallhm = parseInt(localStorage.getItem("lhm")) || 0;
+lnaOutput.innerHTML=totallna+"<br>----<br>";
+lhmOutput.innerHTML=totallhm+"<br>----<br>";
 
 buttonSgl.addEventListener("click",()=>{
 var lna=parseInt(lnaInput.value)||0;
@@ -12,10 +14,12 @@ var lhm=parseInt(lhmInput.value)||0;
 
 totallna+= lna;
 totallhm+=lhm;
- 
+ localStorage.setItem("lna",totallna);
+  localStorage.setItem("lhm",totallhm);
 
-lnaOutput.innerHTML+= totallna+"<br>----<br>"
-lhmOutput.innerHTML+=totallhm+"<br>----<br>"
+
+lnaOutput.innerHTML+= localStorage.getItem("lna")+"<br>----<br>"
+lhmOutput.innerHTML+=localStorage.getItem("lhm")+"<br>----<br>"
 
 if (totallna >= 152 | totallhm >= 152) {
     if (totallna > totallhm) {
@@ -27,9 +31,11 @@ if (totallna >= 152 | totallhm >= 152) {
     alert("تعادل");
 
 
-totallna= 0;
-totallhm=0;
- lnaOutput.innerHTML= ""
+localStorage.removeItem("lna");
+localStorage.removeItem("lhm");
+lnaOutput.innerHTML=''
 lhmOutput.innerHTML=''
+totallhm=0;
+totallna=0
 };
 } )
