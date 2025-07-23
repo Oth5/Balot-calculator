@@ -1,1 +1,0 @@
-# Balot-calculator
