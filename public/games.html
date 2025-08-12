@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>لوحة التحكم</title>
+  <link rel="stylesheet" href="../public/style/style1.css">
+
+  </head>
+  <body>
+    <div class="header">لوحة التحكم</div>
+
+    <div class="container">
+      <!-- Tabs -->
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-target="#gamesPanel">الجلسات</button>
+        <button class="tab" data-target="#usersPanel">المستخدمون</button>
+      </div>
+
+      <!-- الجلسات (تبقى كما هي، ركّزنا هنا على المستخدمين) -->
+      <section id="gamesPanel" class="panel active">
+        <div class="toolbar">
+          <button class="btn" id="createGameBtn">➕ جلسة جديدة</button>
+          <button class="btn" id="refreshGamesBtn">🔄 تحديث</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>رقم الجلسة</th>
+                <th>الحالة</th>
+                <th>وقت البداية</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="gamesTable">
+              <tr>
+                <!--يعبئ ديناميكيا-->>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- المستخدمون (مربوطة بالكامل) -->
+      <section id="usersPanel" class="panel">
+        <div class="toolbar">
+          <input class="input" id="newUsername" placeholder="اسم مستخدم جديد" />
+          <button class="btn primary" id="addUserBtn">➕ إضافة مستخدم</button>
+
+          <input class="input" id="findUserId" placeholder="بحث بالـID" />
+          <button class="btn" id="viewUserBtn">عرض بالـID</button>
+
+          <button class="btn" id="refreshUsersBtn">🔄 تحديث</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>رقم المستخدم</th>
+                <th>الاسم</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="usersTable">
+              <!-- يعبّى ديناميكيًا -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="./game.js"></script>
+
+    </script>
+  </body>
+</html>
