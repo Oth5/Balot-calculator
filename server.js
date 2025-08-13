@@ -70,7 +70,7 @@ app.get("/health", (req, res) => {
 app.get("/users", (req, res) => {
   con.query("SELECT * FROM users", (err, result) => {
    if (err) {
-    console.error("❌ Select error:", err.code, err.message); // يبقى
+    console.error("❌ Select error:", err.code, err.message);
     return res.status(500).json({ error: err.code, message: err.sqlMessage });
   }
     res.json(result);
@@ -83,7 +83,7 @@ app.get("/users/:id", (req, res) => {
 
   con.query("SELECT * FROM users WHERE id=?", [userID], (err, result) => {
    if (err) {
-    console.error("❌ Select error:", err.code, err.message); // يبقى
+    console.error("❌ Select error:", err.code, err.message); 
     return res.status(500).json({ error: err.code, message: err.sqlMessage });
   }
     return res.json(result[0]);
@@ -141,7 +141,7 @@ app.get("/games/:id", (req, res) => {
       console.error("❌ Select error:", err.code, err.message);
       return res.status(500).json({ error: err.code });
     }
-    res.json(result);
+    res.json(result[0]);
   });
 });
 

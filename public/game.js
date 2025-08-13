@@ -13,7 +13,6 @@ document.querySelectorAll(".tab").forEach((tab) => {
 });
 
 const API_URL = "https://balot-calculator-production.up.railway.app";
-
 async function loadUsers() {
   const tbody = document.getElementById("usersTable");
   tbody.innerHTML = `<tr><td colspan="3">جاري التحميل...</td></tr>`;

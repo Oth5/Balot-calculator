@@ -180,4 +180,7 @@
           min-width: 160px;
           flex: 1;
         }
+        #tabs{
+          margin-right: 6rem;
+        }
       }
