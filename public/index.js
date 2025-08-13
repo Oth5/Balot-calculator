@@ -19,15 +19,15 @@ async function loadscores() {
     lhmoutput.textContent = "لا يوجد game_id";
     return;
   }
-totalLna = 0;
- totalLhm = 0;
+  totalLna = 0;
+  totalLhm = 0;
   lnaoutput.innerHTML = "";
   lhmoutput.innerHTML = "";
   try {
     const d = await axios.get(`${API_URL}/scores/${gameId}`);
     const result = d.data;
 
-      result.forEach((e) => {
+    result.forEach((e) => {
       if (e.team === "lna") {
         totalLna += e.score;
         lnaoutput.innerHTML += e.score + "<br>";
@@ -36,7 +36,7 @@ totalLna = 0;
         lhmoutput.innerHTML += e.score + "<br>";
       }
     });
-       lnaoutput.innerHTML += "----<br>المجموع: " + totalLna;
+    lnaoutput.innerHTML += "----<br>المجموع: " + totalLna;
     lhmoutput.innerHTML += "----<br>المجموع: " + totalLhm;
   } catch (e) {
     alert("خطا في جلب القيم");
@@ -44,20 +44,19 @@ totalLna = 0;
   }
 }
 
-async function addScores() { 
+async function addScores() {
   const lnaEl = document.getElementById("lna");
   const lhmEl = document.getElementById("lhm");
   const lnainput = lnaEl.value.trim();
   const lhminput = lhmEl.value.trim();
-  const lnaoutput=document.getElementById("lnaoutput")
-    const lhmoutput=document.getElementById("lhmoutput")
+  const lnaoutput = document.getElementById("lnaoutput");
+  const lhmoutput = document.getElementById("lhmoutput");
 
   const gameId = readId();
 
-
   try {
     if (lnainput) {
-        totalLna+=parseInt(lnainput)
+      totalLna += parseInt(lnainput);
       await axios.post(`${API_URL}/scores`, {
         game_id: parseInt(gameId),
         team: "lna",
@@ -66,7 +65,7 @@ async function addScores() {
     }
 
     if (lhminput) {
-      totalLhm+=parseInt(lhminput)
+      totalLhm += parseInt(lhminput);
       await axios.post(`${API_URL}/scores`, {
         game_id: parseInt(gameId),
         team: "lhm",
@@ -74,11 +73,12 @@ async function addScores() {
       });
     }
 
- 
-  lnaEl.value = "";
+    lnaEl.value = "";
     lhmEl.value = "";
-   
-   await loadscores();
+
+    await loadscores();
+
+    await CheckWinner();
   } catch (e) {
     console.error(e);
     alert("خطأ في إضافة السكور");
@@ -93,10 +93,39 @@ document.getElementById("lna").addEventListener("keydown", (k) => {
 document.getElementById("lhm").addEventListener("keydown", (k) => {
   if (k.key === "Enter") addScores();
 });
-  
 
+async function newgame() {
+  const gameId = readId();
+  try {
+    await axios.patch(`${API_URL}/games/${gameId}`, { status: "finished" });
 
-function newgame(){
+    const res = await axios.post(`${API_URL}/games`, {
+      users_id: 1,
+    });
 
+    alert("✅ تم إنهاء الصكه وإنشاء صكه جديد");
 
+    const newGameId = res.data.game.id;
+    window.location.href = `index.html?game_id=${newGameId}`;
+  } catch (e) {
+    console.error(e.response.data || e);
+    alert("❌ خطأ في إنشاء الصكه الجديده");
+  }
 }
+
+async function CheckWinner() {
+  if (totalLna < 152 && totalLhm < 152) return;
+  else if (totalLna >= 152 && totalLna > totalLhm) {
+    alert("🏆 فاز فريقنا");
+    await newgame();
+  } else if (totalLhm >= 152 && totalLna < totalLhm) {
+    alert("🏆 فاز فريقهم");
+    await newgame();
+  } else if (totalLna >= 152 && totalLhm >= 152 && totalLna === totalLhm) {
+    alert("🔥تعادل افصلوها بصكه");
+    return;
+  } else {
+    return;
+  }
+}
+document.getElementById("restart").addEventListener("click", newgame);

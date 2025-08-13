@@ -167,7 +167,7 @@ loadGames();
 //اضافه جلسه
 async function addGame() {
 try{
-const d=await axios.post(`${API_URL}/games`,{ users_id: 17 });
+const d=await axios.post(`${API_URL}/games`,{ users_id: 1});
 
 await loadGames();
 

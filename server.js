@@ -7,32 +7,39 @@ const app = express();
 app.use(cors());
 
 const port = process.env.PORT || 3000;
+let con;
 
-let con = mysql.createConnection({
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "Aoo12aoo",
-  database: process.env.DB_NAME || "balot_game",
-  port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 3306,
-});
+function connectWithRetry(attempt = 1) {
+  con = mysql.createConnection({
+    host: process.env.MYSQLHOST || "localhost",
+    user: process.env.MYSQLUSER || "root",
+    password: process.env.MYSQLPASSWORD || "Aoo12aoo",
+    database: process.env.MYSQLDATABASE || "balot_game",
+    port: Number(process.env.MYSQLPORT) || 3306,
+    // لو احتجت SSL لاحقًا فعِّل السطر التالي
+    // ssl: { rejectUnauthorized: true },
+  });
 
-con.connect((err) => {
-  if (err) {
-    console.error("❌ MySQL connect error:", err.code, err.message);
-  } else {
+  con.connect((err) => {
+    if (err) {
+      console.error(`❌ MySQL connect error [attempt ${attempt}]:`, err.code, err.message);
+      if (attempt < 10) return setTimeout(() => connectWithRetry(attempt + 1), 2000);
+      return process.exit(1);
+    }
     console.log("✅ Connected to MySQL");
-  }
-});
+  });
 
-con.connect((err) => {
-  if (err) {
-    console.error("❌ MySQL connect error:", err.code, err.message);
-  } else {
-    console.log("✅ Connected to MySQL");
-  }
-});
+  con.on("error", (err) => {
+    console.error("MySQL error:", err.code, err.message);
+    if (["PROTOCOL_CONNECTION_LOST", "ECONNRESET", "ECONNREFUSED"].includes(err.code)) {
+      connectWithRetry();
+    } else {
+      throw err;
+    }
+  });
+}
 
-
+connectWithRetry();
 //get all users
 app.get("/users", (req, res) => {
   con.query("SELECT * FROM users", (err, result) => {
