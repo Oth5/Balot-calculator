@@ -5,6 +5,7 @@ import cors from "cors";
 
 const app = express();
 app.use(cors());
+app.use(bodyParser.json());
 
 app.get("/", (req, res) => {
   res.redirect("/games.html");
@@ -68,10 +69,10 @@ app.get("/health", (req, res) => {
 //get all users
 app.get("/users", (req, res) => {
   con.query("SELECT * FROM users", (err, result) => {
-    if (err) {
-      console.error("❌ Select error:", err.code, err.message);
-      return res.status(500).json({ error: err.code });
-    }
+   if (err) {
+    console.error("❌ Select error:", err.code, err.message); // يبقى
+    return res.status(500).json({ error: err.code, message: err.sqlMessage });
+  }
     res.json(result);
   });
 });
@@ -81,10 +82,10 @@ app.get("/users/:id", (req, res) => {
   const userID = req.params.id;
 
   con.query("SELECT * FROM users WHERE id=?", [userID], (err, result) => {
-    if (err) {
-      console.error("❌ Select error:", err.code, err.message);
-      return res.status(500).json({ error: err.code });
-    }
+   if (err) {
+    console.error("❌ Select error:", err.code, err.message); // يبقى
+    return res.status(500).json({ error: err.code, message: err.sqlMessage });
+  }
     return res.json(result[0]);
   });
 });
@@ -94,8 +95,9 @@ app.post("/users",(req,res)=>{
 const username=req.body.username;
 con.query("INSERT INTO users (username) VALUES (?)",[username], (err,result)=>{
 
-    if(err){
-       return res.status(500).send(err)
+     if (err) {
+      console.error("❌ Insert user error:", err.code, err.sqlMessage);
+      return res.status(500).json({ error: err.code, message: err.sqlMessage });
     }
    return  res.json({id:result.insertId,username})
 })
