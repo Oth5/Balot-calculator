@@ -12,7 +12,7 @@ document.querySelectorAll(".tab").forEach((tab) => {
   });
 });
 
-const API_URL = "http://localhost:3000"; // على الجوال غيّرها لـ IP جهازك
+const API_URL = "https://balot-calculator-production.up.railway.app";
 
 async function loadUsers() {
   const tbody = document.getElementById("usersTable");

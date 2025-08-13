@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000";
+const API_URL = "https://balot-calculator-production.up.railway.app";
 
 let totalLna = 0;
 let totalLhm = 0;
