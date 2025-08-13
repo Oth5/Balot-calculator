@@ -10,7 +10,7 @@ app.get("/", (req, res) => {
   res.redirect("/games.html");
 });
 
-app.use(express.static("/public"))
+app.use(express.static("./public"))
 
 const port = process.env.PORT || 3000;
 let con;
