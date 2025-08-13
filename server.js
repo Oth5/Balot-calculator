@@ -56,6 +56,11 @@ app.get("/", (req, res) => {
   res.send("✅ Balot Calculator API is running!");
 });
 
+app.get("/", (req, res) => {
+  res.redirect("/games.html");
+});
+
+
 /* ✅ مسار فحص الصحة */
 app.get("/health", (req, res) => {
   res.status(200).send("OK");
