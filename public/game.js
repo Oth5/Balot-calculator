@@ -1,207 +1,131 @@
-
-document.querySelectorAll(".tab").forEach((tab) => {
-  tab.addEventListener("click", () => {
-    document
-      .querySelectorAll(".tab")
-      .forEach((t) => t.classList.remove("active"));
-    document
-      .querySelectorAll(".panel")
-      .forEach((p) => p.classList.remove("active"));
-    tab.classList.add("active");
-    document.querySelector(tab.dataset.target).classList.add("active");
-  });
-});
-
 const API_URL = "https://balot-calculator-production.up.railway.app";
 
-async function loadUsers() {
-  const tbody = document.getElementById("usersTable");
-  tbody.innerHTML = `<tr><td colspan="3">جاري التحميل...</td></tr>`;
+let totalLna = 0;
+let totalLhm = 0;
+
+function readId() {
+  const id = new URLSearchParams(location.search).get("game_id");
+  return id;
+}
+
+async function loadscores() {
+  const lnaoutput = document.getElementById("lnaoutput");
+  const lhmoutput = document.getElementById("lhmoutput");
+
+  const gameId = readId();
+
+  if (!gameId) {
+    lnaoutput.textContent = "لا يوجد game_id";
+    lhmoutput.textContent = "لا يوجد game_id";
+    return;
+  }
+  totalLna = 0;
+  totalLhm = 0;
+  lnaoutput.innerHTML = "";
+  lhmoutput.innerHTML = "";
   try {
-    const d = await axios.get(`${API_URL}/users`);
+    const d = await axios.get(`${API_URL}/scores/${gameId}`);
     const result = d.data;
 
-    if (result.length === 0) {
-      return (tbody.innerHTML = `<tr><td colspan="3">لا يوجد مستخدمين</td></tr>`);
+    result.forEach((e) => {
+      if (e.team === "lna") {
+        totalLna += e.score;
+        lnaoutput.innerHTML += e.score + "<br>";
+      } else if (e.team === "lhm") {
+        totalLhm += e.score;
+        lhmoutput.innerHTML += e.score + "<br>";
+      }
+    });
+    lnaoutput.innerHTML += "----<br>المجموع: " + totalLna;
+    lhmoutput.innerHTML += "----<br>المجموع: " + totalLhm;
+  } catch (e) {
+    alert("خطا في جلب القيم");
+    console.error(e.code, e);
+  }
+}
+
+async function addScores() {
+  const lnaEl = document.getElementById("lna");
+  const lhmEl = document.getElementById("lhm");
+  const lnainput = lnaEl.value.trim();
+  const lhminput = lhmEl.value.trim();
+  const lnaoutput = document.getElementById("lnaoutput");
+  const lhmoutput = document.getElementById("lhmoutput");
+
+  const gameId = readId();
+
+  try {
+    if (lnainput) {
+      totalLna += parseInt(lnainput);
+      await axios.post(`${API_URL}/scores`, {
+        game_id: parseInt(gameId),
+        team: "lna",
+        score: totalLna,
+      });
     }
 
-    const tableshow = result.map(
-        (results) => `
-            <tr>
-                <td>${results.id}</td>
-                <td>${results.username}</td>
-            <td>
-                        <button class="btn-outline-red" onclick="removeUser(${results.id})">حذف</button>
-                      </td>
-            </tr>
-            `
-      )
-      .join("");
-    tbody.innerHTML = tableshow;
-  } catch (e) {
-    console.error(e);
-    tbody.innerHTML = `<tr><td colspan="3">تعذر تحميل المستخدمين</td></tr>`;
-  }
-}
-
-async function addusers() {
-  const input = document.getElementById("newUsername");
-
-  const name = input.value.trim();
-
-  if (!name) {
-    alert("رجاء ادخل الاسم");
-    return;
-  }
-  try {
-    const { data } = await axios.post(API_URL + "/users", { username: name });
-    input.value = "";
-   await loadUsers();
-    alert(`تمت الإضافة (ID: ${data.id})`);
-  } catch (e) {
-    alert("تعذر إضافة المستخدم: ");
-    console.error(e.code);
-  }
-}
-
-async function GetUserById() {
-  const tbody = document.getElementById("usersTable");
-  const findUserId = document.getElementById("findUserId").value.trim();
-  tbody.innerHTML = `<tr><td colspan="3">جاري البحث...</td></tr>`;
-
-  if (!findUserId) {
-    tbody.innerHTML = `<tr><td colspan="3">الرجاء إدخال ID</td></tr>`;
-    return;
-  }
-  try {
-    const result = await axios.get(`${API_URL}/users/${findUserId}`);
-    let results = result.data;
-    if (!results || !results.id) {
-      tbody.innerHTML = `<tr><td colspan="3">لم يتم العثور على المستخدم</td></tr>`;
-      return;
+    if (lhminput) {
+      totalLhm += parseInt(lhminput);
+      await axios.post(`${API_URL}/scores`, {
+        game_id: parseInt(gameId),
+        team: "lhm",
+        score: totalLhm,
+      });
     }
 
-    tbody.innerHTML = `<tr>
-                  <td>${results.id}</td>
-                  <td>${results.username}</td>
-                  <td> 
-                          <button class="btn-outline-red" onclick="removeUser(${results.id})">حذف</button>
-                  </td>
+    lnaEl.value = "";
+    lhmEl.value = "";
 
+    await loadscores();
 
-                  </tr>`;
-  } catch (err) {
-    console.error(err);
-    tbody.innerHTML = `<tr><td colspan="3">خطأ أثناء جلب البيانات</td></tr>`;
-  }
-}
-
-async function removeUser(id) {
-  if (!confirm("هل أنت متأكد أنك تريد حذف هذا المستخدم؟")) return;
-
-  try {
-    const res = await axios.delete(`${API_URL}/users/${id}`);
-   await loadUsers();
-    alert("تم حذف المستخدم بنجاح");
-  } catch (err) {
-    console.error(err);
-    alert("تعذر حذف المستخدم ❌");
-  }
-}
-
-document.getElementById("viewUserBtn").addEventListener("click", GetUserById);
-
-document.getElementById("refreshUsersBtn").addEventListener("click", loadUsers);
-document.getElementById("findUserId").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") GetUserById();
-});
-
-document.getElementById("addUserBtn").addEventListener("click", addusers);
-document.getElementById("newUsername").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") addusers();
-});
-
-loadUsers();
-
-
-//الجلسات
-async function loadGames(){
-const tbody=document.getElementById("gamesTable");
-tbody.innerHTML=`<tr><td colspan="4">جاري التحميل...</td></tr>`
-try{
-const d= await axios.get(`${API_URL}/games`);
-const result=d.data;
-if(result.length===0){
-    tbody.innerHTML=`<tr><td colspan="4">لايوجد جلسات</td></tr>`
-return;
-}
-tbody.innerHTML=result.map((r)=>
-`<tr>
-<td>${r.id}</td>
-<td>${r.status}</td>
- <td>${r.start_time 
-        ? new Date(r.start_time).toLocaleString("ar-EG", { 
-            hour: "2-digit", 
-            minute: "2-digit", 
-            month: "long",
-           day: "2-digit",
-          }) 
-        : "-"}</td>
-<td>
-<button class="btn-outline-blue" onclick="ChangeState(${r.id})">تعديل الحاله</button>
-<button class="btn-outline-red" onclick="GoPlay(${r.id})">الانتقال الى اللعب</button>
-</td>
-</tr>
-`
-).join("")
-
-
-
-}catch(e){
+    await CheckWinner();
+  } catch (e) {
     console.error(e);
-    tbody.innerHTML = `<tr><td colspan="4">تعذر تحميل المستخدمين</td></tr>`;
+    alert("خطأ في إضافة السكور");
+  }
 }
-}
-loadGames();
+loadscores();
+document.getElementById("sgl").addEventListener("click", addScores);
+document.getElementById("lna").addEventListener("keydown", (k) => {
+  if (k.key === "Enter") addScores();
+});
 
-//اضافه جلسه
-async function addGame() {
-try{
-const d=await axios.post(`${API_URL}/games`,{ users_id: 1});
+document.getElementById("lhm").addEventListener("keydown", (k) => {
+  if (k.key === "Enter") addScores();
+});
 
-await loadGames();
-
-    alert(`تمت الإضافة (ID: ${d.data.game.id})`);
-}catch(e){
-    alert(`تعذر انشاء الجلسه`);
-        console.error(e.code,e);
-
-}
-    
-}
-
-document.getElementById("createGameBtn").addEventListener("click",addGame);
-
-async function ChangeState(Id) {
-  const newStatus = prompt("أدخل الحالة الجديدة (مثال: ongoing أو finished):");
-
-  if (!newStatus) return; 
-
+async function newgame() {
+  const gameId = readId();
   try {
-    const { data } = await axios.patch(`${API_URL}/games/${Id}`, {
-      status: newStatus
+    await axios.patch(`${API_URL}/games/${gameId}`, { status: "finished" });
+
+    const res = await axios.post(`${API_URL}/games`, {
+      users_id: 1,
     });
 
-    alert(`✅ تم تحديث الحالة إلى "${data.status}"`);
-    loadGames(); 
-  } catch (err) {
-    console.error(err);
-    alert("❌ تعذر تعديل الحالة");
+    alert("✅ تم إنهاء الصكه وإنشاء صكه جديد");
+
+    const newGameId = res.data.game.id;
+    window.location.href = `index.html?game_id=${newGameId}`;
+  } catch (e) {
+    console.error(e.response.data || e);
+    alert("❌ خطأ في إنشاء الصكه الجديده");
   }
 }
 
-function GoPlay(id){
-    window.location.href= `index.html?game_id=${encodeURIComponent(id)}`;
+async function CheckWinner() {
+  if (totalLna < 152 && totalLhm < 152) return;
+  else if (totalLna >= 152 && totalLna > totalLhm) {
+    alert("🏆 فاز فريقنا");
+    await newgame();
+  } else if (totalLhm >= 152 && totalLna < totalLhm) {
+    alert("🏆 فاز فريقهم");
+    await newgame();
+  } else if (totalLna >= 152 && totalLhm >= 152 && totalLna === totalLhm) {
+    alert("🔥تعادل افصلوها بصكه");
+    return;
+  } else {
+    return;
+  }
 }
-
-document.getElementById("refreshGamesBtn").addEventListener("click", loadGames);
+document.getElementById("restart").addEventListener("click", newgame);
