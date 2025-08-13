@@ -167,9 +167,8 @@ loadGames();
 async function addGame() {
 try{
 const d=await axios.post(`${API_URL}/games`,{ users_id: 1});
-
-await loadGames();
-
+GoPlay(d.data.game.id);
+await loadGames()
     alert(`تمت الإضافة (ID: ${d.data.game.id})`);
 }catch(e){
     alert(`تعذر انشاء الجلسه`);
@@ -199,8 +198,20 @@ async function ChangeState(Id) {
   }
 }
 
-function GoPlay(id){
+async function GoPlay(id){
+try{
+const d=await axios.get(`${API_URL}/games/${id}`);
+if(d.data.status==="finished"){
+  alert("الصكه منتهيه ماتقدر توصل لها")
+  return;
+}
+
+
     window.location.href= `index.html?game_id=${encodeURIComponent(id)}`;
+}catch(e){
+  alert("مشكله في الانتقال")
+  console.error(e.code,e);
+}
 }
 
 document.getElementById("refreshGamesBtn").addEventListener("click", loadGames);
