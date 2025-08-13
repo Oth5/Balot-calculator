@@ -41,6 +41,7 @@ function connectWithRetry(attempt = 1) {
 
 connectWithRetry();
 
+
 console.log("DB CONFIG =>", {
   host: process.env.MYSQLHOST,
   port: process.env.MYSQLPORT,
@@ -48,6 +49,16 @@ console.log("DB CONFIG =>", {
   password: process.env.MYSQLPASSWORD ? '***' : 'MISSING',
   database: process.env.MYSQLDATABASE,
 });
+
+app.get("/", (req, res) => {
+  res.send("✅ Balot Calculator API is running!");
+});
+
+/* ✅ مسار فحص الصحة */
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
+
 //get all users
 app.get("/users", (req, res) => {
   con.query("SELECT * FROM users", (err, result) => {
