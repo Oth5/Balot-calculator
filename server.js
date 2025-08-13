@@ -22,8 +22,6 @@ function connectWithRetry(attempt = 1) {
     password: process.env.MYSQLPASSWORD || "Aoo12aoo",
     database: process.env.MYSQLDATABASE || "balot_game",
     port: Number(process.env.MYSQLPORT) || 3306,
-    // لو احتجت SSL لاحقًا فعِّل السطر التالي
-    // ssl: { rejectUnauthorized: true },
   });
 
   con.connect((err) => {
