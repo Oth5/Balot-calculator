@@ -6,6 +6,8 @@ import cors from "cors";
 const app = express();
 app.use(cors());
 
+app.use(express.static("./public"))
+
 const port = process.env.PORT || 3000;
 let con;
 
