@@ -40,6 +40,14 @@ function connectWithRetry(attempt = 1) {
 }
 
 connectWithRetry();
+
+console.log("DB CONFIG =>", {
+  host: process.env.MYSQLHOST,
+  port: process.env.MYSQLPORT,
+  user: process.env.MYSQLUSER,
+  password: process.env.MYSQLPASSWORD ? '***' : 'MISSING',
+  database: process.env.MYSQLDATABASE,
+});
 //get all users
 app.get("/users", (req, res) => {
   con.query("SELECT * FROM users", (err, result) => {
