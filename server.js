@@ -6,7 +6,11 @@ import cors from "cors";
 const app = express();
 app.use(cors());
 
-app.use(express.static("./public"))
+app.get("/", (req, res) => {
+  res.redirect("/games.html");
+});
+
+app.use(express.static("/public"))
 
 const port = process.env.PORT || 3000;
 let con;
@@ -56,9 +60,6 @@ app.get("/", (req, res) => {
   res.send("✅ Balot Calculator API is running!");
 });
 
-app.get("/", (req, res) => {
-  res.redirect("/games.html");
-});
 
 
 /* ✅ مسار فحص الصحة */
