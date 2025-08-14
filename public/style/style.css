@@ -98,6 +98,24 @@ h2 {
   overflow-y: auto;
 }
 
+.admin-btn {
+  display: inline-block;
+  background-color: #0074a8; /* لون الخلفية */
+  color: white; /* لون النص */
+  padding: 10px 20px; /* مسافة داخلية */
+  text-decoration: none; /* إزالة الخط */
+  border-radius: 8px; /* زوايا دائرية */
+  box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4); /* ظل */
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.admin-btn:hover {
+  background-color: #005f86; /* لون عند المرور */
+}
+
 @media(max-width:600px) {
 
 

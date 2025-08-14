@@ -1,4 +1,5 @@
 const API_URL = "https://balot-calculator-production.up.railway.app";
+//const API_URL = "http://172.20.10.3:3000";
 
 let totalLna = 0;
 let totalLhm = 0;

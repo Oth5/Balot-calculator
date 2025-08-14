@@ -11,8 +11,9 @@ document.querySelectorAll(".tab").forEach((tab) => {
     document.querySelector(tab.dataset.target).classList.add("active");
   });
 });
-
 const API_URL = "https://balot-calculator-production.up.railway.app";
+//const API_URL = "http://172.20.10.3:3000";
+
 async function loadUsers() {
   const tbody = document.getElementById("usersTable");
   tbody.innerHTML = `<tr><td colspan="3">جاري التحميل...</td></tr>`;
