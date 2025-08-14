@@ -97,9 +97,15 @@ async function GetUserById() {
 }
 
 async function removeUser(id) {
+  if(parseInt(id)===1){
+      alert("ما تقدر تحذف player1")
+      return
+    }
+
   if (!confirm("هل أنت متأكد أنك تريد حذف هذا المستخدم؟")) return;
 
   try {
+    
     const res = await axios.delete(`${API_URL}/users/${id}`);
    await loadUsers();
     alert("تم حذف المستخدم بنجاح");
