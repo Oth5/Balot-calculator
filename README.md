@@ -10,4 +10,5 @@ A web application to calculate scores for the Balot card game using **Node.js**,
 ```bash
 npm install
 
+```
 https://balot-calculator-production.up.railway.app/
