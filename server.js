@@ -20,7 +20,7 @@ function connectWithRetry(attempt = 1) {
   con = mysql.createConnection({
     host: process.env.MYSQLHOST || "localhost",
     user: process.env.MYSQLUSER || "root",
-    password: process.env.MYSQLPASSWORD || "Aoo12aoo",
+    password: process.env.MYSQLPASSWORD || "",
     database: process.env.MYSQLDATABASE || "balot_game",
     port: Number(process.env.MYSQLPORT) || 3306,
   });
