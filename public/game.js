@@ -1,4 +1,3 @@
-
 document.querySelectorAll(".tab").forEach((tab) => {
   tab.addEventListener("click", () => {
     document
@@ -11,8 +10,9 @@ document.querySelectorAll(".tab").forEach((tab) => {
     document.querySelector(tab.dataset.target).classList.add("active");
   });
 });
-const API_URL = "https://balot-calculator-production.up.railway.app";
-//const API_URL = "http://172.20.10.3:3000";
+const API_URL = window.location.hostname.includes("localhost")
+  ? "http://localhost:3000"   // لو تشغل محلي
+  : "https://balot-calculator-production.up.railway.app"; // لو على Railway
 
 async function loadUsers() {
   const tbody = document.getElementById("usersTable");
@@ -25,7 +25,8 @@ async function loadUsers() {
       return (tbody.innerHTML = `<tr><td colspan="3">لا يوجد مستخدمين</td></tr>`);
     }
 
-    const tableshow = result.map(
+    const tableshow = result
+      .map(
         (results) => `
             <tr>
                 <td>${results.id}</td>
@@ -56,7 +57,7 @@ async function addusers() {
   try {
     const { data } = await axios.post(API_URL + "/users", { username: name });
     input.value = "";
-   await loadUsers();
+    await loadUsers();
     alert(`تمت الإضافة (ID: ${data.id})`);
   } catch (e) {
     alert("تعذر إضافة المستخدم: ");
@@ -97,17 +98,16 @@ async function GetUserById() {
 }
 
 async function removeUser(id) {
-  if(parseInt(id)===1){
-      alert("ما تقدر تحذف player1")
-      return
-    }
+  if (parseInt(id) === 1) {
+    alert("ما تقدر تحذف player1");
+    return;
+  }
 
   if (!confirm("هل أنت متأكد أنك تريد حذف هذا المستخدم؟")) return;
 
   try {
-    
     const res = await axios.delete(`${API_URL}/users/${id}`);
-   await loadUsers();
+    await loadUsers();
     alert("تم حذف المستخدم بنجاح");
   } catch (err) {
     console.error(err);
@@ -129,96 +129,98 @@ document.getElementById("newUsername").addEventListener("keydown", (e) => {
 
 loadUsers();
 
-
 //الجلسات
-async function loadGames(){
-const tbody=document.getElementById("gamesTable");
-tbody.innerHTML=`<tr><td colspan="4">جاري التحميل...</td></tr>`
-try{
-const d= await axios.get(`${API_URL}/games`);
-const result=d.data;
-if(result.length===0){
-    tbody.innerHTML=`<tr><td colspan="4">لايوجد جلسات</td></tr>`
-return;
-}
-tbody.innerHTML=result.map((r)=>
-`<tr>
+async function loadGames() {
+  const tbody = document.getElementById("gamesTable");
+  tbody.innerHTML = `<tr><td colspan="4">جاري التحميل...</td></tr>`;
+  try {
+    const d = await axios.get(`${API_URL}/games`);
+    const result = d.data;
+    if (result.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4">لايوجد جلسات</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = result
+      .map(
+        (r) =>
+          `<tr>
 <td>${r.id}</td>
 <td>${r.status}</td>
- <td>${r.start_time 
-        ? new Date(r.start_time).toLocaleString("ar-EG", { 
-            hour: "2-digit", 
-            minute: "2-digit", 
-            month: "long",
-           day: "2-digit",
-          }) 
-        : "-"}</td>
+ <td>${
+   r.start_time
+     ? new Date(r.start_time).toLocaleString("ar-EG", {
+         hour: "2-digit",
+         minute: "2-digit",
+         month: "long",
+         day: "2-digit",
+       })
+     : "-"
+ }</td>
 <td>
-<button class="btn-outline-blue" onclick="ChangeState(${r.id})">تعديل الحاله</button>
-<button class="btn-outline-red" onclick="GoPlay(${r.id})">الانتقال الى اللعب</button>
+<button class="btn-outline-blue" onclick="ChangeState(${
+            r.id
+          })">تعديل الحاله</button>
+<button class="btn-outline-red" onclick="GoPlay(${
+            r.id
+          })">الانتقال الى اللعب</button>
 </td>
 </tr>
 `
-).join("")
-
-
-
-}catch(e){
+      )
+      .join("");
+  } catch (e) {
     console.error(e);
     tbody.innerHTML = `<tr><td colspan="4">تعذر تحميل المستخدمين</td></tr>`;
-}
+  }
 }
 loadGames();
 
 //اضافه جلسه
 async function addGame() {
-try{
-const d=await axios.post(`${API_URL}/games`,{ users_id: 1});
-GoPlay(d.data.game.id);
-await loadGames()
+  try {
+    const d = await axios.post(`${API_URL}/games`, { users_id: 1 });
+    GoPlay(d.data.game.id);
+    await loadGames();
     alert(`تمت الإضافة (ID: ${d.data.game.id})`);
-}catch(e){
+  } catch (e) {
     alert(`تعذر انشاء الجلسه`);
-        console.error(e.code,e);
-
-}
-    
+    console.error(e.code, e);
+  }
 }
 
-document.getElementById("createGameBtn").addEventListener("click",addGame);
+document.getElementById("createGameBtn").addEventListener("click", addGame);
 
 async function ChangeState(Id) {
   const newStatus = prompt("أدخل الحالة الجديدة (مثال: ongoing أو finished):");
 
-  if (!newStatus) return; 
+  if (!newStatus) return;
 
   try {
     const { data } = await axios.patch(`${API_URL}/games/${Id}`, {
-      status: newStatus
+      status: newStatus,
     });
 
     alert(`✅ تم تحديث الحالة إلى "${data.status}"`);
-    loadGames(); 
+    loadGames();
   } catch (err) {
     console.error(err);
     alert("❌ تعذر تعديل الحالة");
   }
 }
 
-async function GoPlay(id){
-try{
-const d=await axios.get(`${API_URL}/games/${id}`);
-if(d.data.status==="finished"){
-  alert("الصكه منتهيه ماتقدر توصل لها")
-  return;
-}
+async function GoPlay(id) {
+  try {
+    const d = await axios.get(`${API_URL}/games/${id}`);
+    if (d.data.status === "finished") {
+      alert("الصكه منتهيه ماتقدر توصل لها");
+      return;
+    }
 
-
-    window.location.href= `index.html?game_id=${encodeURIComponent(id)}`;
-}catch(e){
-  alert("مشكله في الانتقال")
-  console.error(e.code,e);
-}
+    window.location.href = `index.html?game_id=${encodeURIComponent(id)}`;
+  } catch (e) {
+    alert("مشكله في الانتقال");
+    console.error(e.code, e);
+  }
 }
 
 document.getElementById("refreshGamesBtn").addEventListener("click", loadGames);

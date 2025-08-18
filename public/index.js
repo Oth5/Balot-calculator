@@ -1,5 +1,6 @@
-const API_URL = "https://balot-calculator-production.up.railway.app";
-//const API_URL = "http://172.20.10.3:3000";
+const API_URL = window.location.hostname.includes("localhost")
+  ? "http://localhost:3000"   // لو تشغل محلي
+  : "https://balot-calculator-production.up.railway.app"; // لو على Railway
 
 let totalLna = 0;
 let totalLhm = 0;
