@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>balot game</title>
+    <link href="./style/style.css" rel="stylesheet" />
+      <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  </head>
+
+  <body>
+<div>
+<button class="user-btn" onclick="backtopage()">صفحة اليوزر</button>
+</div>
+
+    <section class="balot-calculator">
+      <div>
+        <h2>لنا</h2>
+        <input type="text" id="lna" />
+        <label for="lna"></label>
+      </div>
+      <div>
+        <h2>لهم</h2>
+        <input type="text" id="lhm" />
+        <label for="lhm"></label>
+      </div>
+    </section>
+    <div class="button-container">
+      <button id="sgl">سجل</button>
+    </div>
+    <div class="restart-container">
+      <button id="restart">صكه جديده</button>
+    </div>
+    <section class="blue-bar"></section>
+    <div class="line"></div>
+
+  <div class="output">
+    <div class="team" id="lnaoutput"></div>
+    <div class="team" id="lhmoutput"></div>
+  </div>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="./index.js"></script>
+  </body>
+
+
+</html>
+
