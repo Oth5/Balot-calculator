@@ -95,25 +95,29 @@ document.getElementById("lna").addEventListener("keydown", (k) => {
 document.getElementById("lhm").addEventListener("keydown", (k) => {
   if (k.key === "Enter") addScores();
 });
-
 async function newgame() {
   const gameId = readId();
   try {
     await axios.patch(`${API_URL}/games/${gameId}`, { status: "finished" });
 
-    const res = await axios.post(`${API_URL}/games`, {
-      users_id: 1,
-    });
+    const cur = await axios.get(`${API_URL}/games/${gameId}`);
+    const userId = cur.data?.users_id;
+    if (!userId) {
+      alert("تعذر معرفة صاحب الصكة الحالية لبدء صكة جديدة");
+      return;
+    }
 
-    alert("✅ تم إنهاء الصكه وإنشاء صكه جديد");
+    const res = await axios.post(`${API_URL}/games`, { users_id: userId });
 
+    alert("✅ تم إنهاء الصكه وإنشاء صكه جديدة");
     const newGameId = res.data.game.id;
-    window.location.href = `index.html?game_id=${newGameId}`;
+    window.location.href = `index.html?game_id=${encodeURIComponent(newGameId)}`;
   } catch (e) {
-    console.error(e.response.data || e);
-    alert("❌ خطأ في إنشاء الصكه الجديده");
+    console.error(e?.response?.data || e);
+    alert("❌ خطأ في إنشاء الصكه الجديدة");
   }
 }
+
 
 async function CheckWinner() {
   if (totalLna < 152 && totalLhm < 152) return;
@@ -131,3 +135,23 @@ async function CheckWinner() {
   }
 }
 document.getElementById("restart").addEventListener("click", newgame);
+
+async function backtopage() {
+  const id = readId(); 
+  if (!id) return alert("لا يوجد game_id في الرابط");
+
+  try {
+    const { data } = await axios.get(`${API_URL}/games/${encodeURIComponent(id)}`);
+    const userId = data.users_id
+
+    if (!userId) {
+      alert("تعذر معرفة المستخدم لهذه الصكة");
+      return;
+    }
+
+    window.location.href = `user.html?users_id=${encodeURIComponent(userId)}`; 
+  } catch (e) {
+    console.error(e?.response?.data || e);
+    alert("خطأ في الانتقال إلى صفحة اليوزر");
+  }
+}

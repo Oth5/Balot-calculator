@@ -115,6 +115,24 @@ h2 {
 .admin-btn:hover {
   background-color: #005f86; /* لون عند المرور */
 }
+.user-btn {
+  display: inline-block;
+  background-color: #0074a8; /* لون الخلفية */
+  color: white; /* لون النص */
+  border-radius: 8px; /* زوايا دائرية */
+  box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4); /* ظل */
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 2rem;
+  width: 8rem;
+  height: 2.97rem;
+}
+
+.user-btn:hover {
+  background-color: #005f86; /* لون عند المرور */
+}
+
 
 @media(max-width:600px) {
 

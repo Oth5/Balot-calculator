@@ -236,17 +236,13 @@ app.get("/games/:id", (req, res) => {
 });
 
 // get user games
-app.get("/games/:users_id", (req, res) => {
-  const userID = req.params.id;
-
-  con.query("SELECT * FROM games WHERE users_id=?", [userID], (err, result) => {
-    if (err) {
-      console.error("❌ Select error:", err.code, err.message);
-      return res.status(500).json({ error: err.code });
-    }
-    res.json(result);
+app.get("/users/:id/games", (req, res) => {
+  con.query("SELECT * FROM games WHERE users_id = ?", [req.params.id], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.code });
+    res.json(rows); 
   });
 });
+
 
 app.post("/games", (req, res) => {
   const { users_id } = req.body;

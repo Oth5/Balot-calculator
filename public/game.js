@@ -1,3 +1,12 @@
+const API_URL = window.location.hostname.includes("localhost")
+  ? "http://localhost:3000" // لو تشغل محلي
+  : "https://balot-calculator-production.up.railway.app"; // لو على Railway
+
+const u = JSON.parse(localStorage.getItem("authUser") || "null");
+if (!u) location.href = "login.html";
+else if (u.role !== "admin") {
+  location.href = `login.html`;
+}
 document.querySelectorAll(".tab").forEach((tab) => {
   tab.addEventListener("click", () => {
     document
@@ -10,9 +19,6 @@ document.querySelectorAll(".tab").forEach((tab) => {
     document.querySelector(tab.dataset.target).classList.add("active");
   });
 });
-const API_URL = window.location.hostname.includes("localhost")
-  ? "http://localhost:3000"   // لو تشغل محلي
-  : "https://balot-calculator-production.up.railway.app"; // لو على Railway
 
 async function loadUsers() {
   const tbody = document.getElementById("usersTable");
@@ -99,7 +105,7 @@ async function GetUserById() {
 
 async function removeUser(id) {
   if (parseInt(id) === 1) {
-    alert("ما تقدر تحذف player1");
+    alert("ما تقدر تحذف الادمن");
     return;
   }
 
@@ -178,13 +184,21 @@ loadGames();
 //اضافه جلسه
 async function addGame() {
   try {
-    const d = await axios.post(`${API_URL}/games`, { users_id: 1 });
+    const user = JSON.parse(localStorage.getItem("authUser") || "null");
+
+    if (!user || !user.id) {
+      alert("⚠️ لم يتم العثور على المستخدم. الرجاء تسجيل الدخول مرة أخرى.");
+      return;
+    }
+
+    const d = await axios.post(`${API_URL}/games`, { users_id: user.id });
+
     GoPlay(d.data.game.id);
     await loadGames();
     alert(`تمت الإضافة (ID: ${d.data.game.id})`);
   } catch (e) {
-    alert(`تعذر انشاء الجلسه`);
-    console.error(e.code, e);
+    alert(`تعذر إنشاء الجلسة`);
+    console.error(e);
   }
 }
 
