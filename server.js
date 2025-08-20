@@ -3,7 +3,8 @@ import mysql from "mysql2";
 import bodyParser from "body-parser";
 import cors from "cors";
 import bcrypt from "bcrypt";
-
+import dotenv from "dotenv";
+dotenv.config();
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
@@ -19,11 +20,11 @@ let con;
 
 function connectWithRetry(attempt = 1) {
   con = mysql.createConnection({
-    host: process.env.MYSQLHOST || "localhost",
-    user: process.env.MYSQLUSER || "root",
-    password: process.env.MYSQLPASSWORD || "Aoo12aoo",
-    database: process.env.MYSQLDATABASE || "balot_game",
-    port: Number(process.env.MYSQLPORT) || 3306,
+    host: process.env.MYSQLHOST,
+    user: process.env.MYSQLUSER,
+    password: process.env.MYSQLPASSWORD,
+    database: process.env.MYSQLDATABASE,
+    port: Number(process.env.MYSQLPORT),
   });
 
   con.connect((err) => {
@@ -100,7 +101,7 @@ app.post("/register", async (req, res) => {
           message: "✅ User registered successfully",
           id: result.insertId,
           username,
-          role: "user"
+          role: "user",
         });
       }
     );
@@ -114,36 +115,47 @@ app.post("/register", async (req, res) => {
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
-    return res.status(400).json({ error: "Username and password are required" });
+    return res
+      .status(400)
+      .json({ error: "Username and password are required" });
   }
 
   con.query(
     "SELECT id, username, password, role FROM users WHERE username = ?",
     [username],
     async (err, rows) => {
-      if (err) return res.status(500).json({ error: err.code, message: err.sqlMessage });
-      if (!rows.length) return res.status(401).json({ error: "Invalid username or password" });
+      if (err)
+        return res
+          .status(500)
+          .json({ error: err.code, message: err.sqlMessage });
+      if (!rows.length)
+        return res.status(401).json({ error: "Invalid username or password" });
 
       const user = rows[0];
 
       try {
         const match = await bcrypt.compare(password, user.password || "");
         if (!match) {
-          return res.status(401).json({ error: "Invalid username or password" });
+          return res
+            .status(401)
+            .json({ error: "Invalid username or password" });
         }
 
         if (user.role === "admin") {
           return res.json({
             message: "✅ Login successful (Admin)",
-            id: user.id, username: user.username, role: user.role ,
+            id: user.id,
+            username: user.username,
+            role: user.role,
           });
         } else {
           return res.json({
             message: "✅ Login successful (User)",
-            id: user.id, username: user.username, role: user.role ,
+            id: user.id,
+            username: user.username,
+            role: user.role,
           });
         }
-
       } catch (e) {
         console.error("❌ Password comparison error:", e.message);
         return res.status(500).json({ error: "COMPARE_FAILED" });
@@ -151,7 +163,6 @@ app.post("/login", (req, res) => {
     }
   );
 });
-
 
 //get all users
 app.get("/users", (req, res) => {
@@ -237,12 +248,15 @@ app.get("/games/:id", (req, res) => {
 
 // get user games
 app.get("/users/:id/games", (req, res) => {
-  con.query("SELECT * FROM games WHERE users_id = ?", [req.params.id], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.code });
-    res.json(rows); 
-  });
+  con.query(
+    "SELECT * FROM games WHERE users_id = ?",
+    [req.params.id],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.code });
+      res.json(rows);
+    }
+  );
 });
-
 
 app.post("/games", (req, res) => {
   const { users_id } = req.body;
