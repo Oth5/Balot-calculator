@@ -3,9 +3,6 @@ import mysql from "mysql2";
 import bodyParser from "body-parser";
 import cors from "cors";
 import bcrypt from "bcrypt";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 const app = express();
 app.use(cors());
@@ -22,11 +19,11 @@ let con;
 
 function connectWithRetry(attempt = 1) {
   con = mysql.createConnection({
-    host: process.env.MYSQLHOST ,
-    user: process.env.MYSQLUSER ,
-    password: process.env.MYSQLPASSWORD ,
-    database: process.env.MYSQLDATABASE ,
-    port: Number(process.env.MYSQLPORT) ,
+    host: process.env.MYSQLHOST || "localhost",
+    user: process.env.MYSQLUSER || "root",
+    password: process.env.MYSQLPASSWORD || "Aoo12aoo",
+    database: process.env.MYSQLDATABASE || "balot_game",
+    port: Number(process.env.MYSQLPORT) || 3306,
   });
 
   con.connect((err) => {

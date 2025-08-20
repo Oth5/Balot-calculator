@@ -111,37 +111,45 @@
         ? "http://localhost:3000" // لو تشغل محلي
         : "https://balot-calculator-production.up.railway.app"; // لو على Railway
 
-      document
-        .getElementById("loginBtn")
-        .addEventListener("click", async () => {
-          const username = document.getElementById("username").value.trim();
-          const password = document.getElementById("password").value;
+      async function login() {
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value;
+        if (!username || !password) {
+          alert("الرجاء إدخال اسم المستخدم وكلمة المرور");
+          return;
+        }
+        try {
+          const d = await axios.post(`${API_URL}/login`, {
+            username,
+            password,
+          });
+          alert(d.data.message);
 
-          if (!username || !password) {
-            alert("الرجاء إدخال اسم المستخدم وكلمة المرور");
-            return;
-          }
-          try {
-            const d = await axios.post(`${API_URL}/login`, {
-              username,
-              password,
-            });
-            alert(d.data.message);
+          localStorage.setItem(
+            "authUser",
+            JSON.stringify(d.data.user || d.data)
+          );
 
-            localStorage.setItem("authUser",JSON.stringify(d.data.user ||d.data))
- 
-            if (d.data.role === "admin") {
-              window.location.href = `games.html`;
-            } else {
-              window.location.href = `user.html?users_id=${encodeURIComponent(
-                d.data.id
-              )}`;
-            }
-          } catch (e) {
-            console.error(e.message, e);
-            alert("خطأ في تسجيل الدخول. الرجاء المحاولة مرة أخرى.");
+          if (d.data.role === "admin") {
+            window.location.href = `games.html`;
+          } else {
+            window.location.href = `user.html?users_id=${encodeURIComponent(
+              d.data.id
+            )}`;
           }
-        });
+        } catch (e) {
+          console.error(e.message, e);
+          alert("خطأ في تسجيل الدخول. الرجاء المحاولة مرة أخرى.");
+        }
+      }
+      document.getElementById("loginBtn").addEventListener("click", login);
+
+      ["username", "password"].forEach((id) =>
+        document.getElementById(id).addEventListener("keydown", (e) => {
+          if (e.key === "Enter") login();
+        })
+      );
+
     </script>
   </body>
 </html>
