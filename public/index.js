@@ -2,6 +2,15 @@ const API_URL = window.location.hostname.includes("localhost")
   ? "http://localhost:3000"   // لو تشغل محلي
   : "https://balot-calculator-production.up.railway.app"; // لو على Railway
 
+   const token = localStorage.getItem("authToken");
+  if (!token) {
+    window.location.href = "login.html";
+  } else {
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      console.log("JWT set:", token.slice(0,20) + "..."); // فحص سريع
+
+  }
+
 let totalLna = 0;
 let totalLhm = 0;
 
@@ -107,7 +116,7 @@ async function newgame() {
       return;
     }
 
-    const res = await axios.post(`${API_URL}/games`, { users_id: userId });
+    const res = await axios.post(`${API_URL}/games`, {});
 
     alert("✅ تم إنهاء الصكه وإنشاء صكه جديدة");
     const newGameId = res.data.game.id;
@@ -142,14 +151,9 @@ async function backtopage() {
 
   try {
     const { data } = await axios.get(`${API_URL}/games/${encodeURIComponent(id)}`);
-    const userId = data.users_id
+   
 
-    if (!userId) {
-      alert("تعذر معرفة المستخدم لهذه الصكة");
-      return;
-    }
-
-    window.location.href = `user.html?users_id=${encodeURIComponent(userId)}`; 
+    window.location.href = `user.html`; 
   } catch (e) {
     console.error(e?.response?.data || e);
     alert("خطأ في الانتقال إلى صفحة اليوزر");

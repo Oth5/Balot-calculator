@@ -4,6 +4,8 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
+import jwt from "jsonwebtoken";
+import { verifyToken } from "./verifyToken.js";
 dotenv.config();
 const app = express();
 app.use(cors());
@@ -14,6 +16,8 @@ app.get("/", (req, res) => {
 });
 
 app.use(express.static("./public"));
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const port = process.env.PORT || 3000;
 let con;
@@ -65,6 +69,7 @@ console.log("DB CONFIG =>", {
   database: process.env.MYSQLDATABASE,
 });
 
+
 app.get("/", (req, res) => {
   res.send("✅ Balot Calculator API is running!");
 });
@@ -74,6 +79,24 @@ app.get("/health", (req, res) => {
   res.status(200).send("OK");
 });
 
+app.get("/me", verifyToken, (req, res) => {
+  res.json({
+    id: req.user.id,
+    username: req.user.username,
+    role: req.user.role,
+  });
+});
+
+app.get("/me/games", verifyToken, (req, res) => {
+  con.query(
+    "SELECT * FROM games WHERE users_id = ? ORDER BY id DESC",
+    [req.user.id],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.code });
+      res.json(rows);
+    }
+  );
+});
 //auth register signup
 app.post("/register", async (req, res) => {
   const { username, password } = req.body;
@@ -141,21 +164,23 @@ app.post("/login", (req, res) => {
             .json({ error: "Invalid username or password" });
         }
 
-        if (user.role === "admin") {
-          return res.json({
-            message: "✅ Login successful (Admin)",
+        const payload = {
+          id: user.id,
+          username: user.username,
+          role: user.role,
+        };
+
+        const token= jwt.sign(payload, JWT_SECRET,{expiresIn:'30m'});
+
+      return res.json({
+        message:`✅ Login successful (${user.role})`,
+        token,
+      user: {   //payload
             id: user.id,
             username: user.username,
             role: user.role,
-          });
-        } else {
-          return res.json({
-            message: "✅ Login successful (User)",
-            id: user.id,
-            username: user.username,
-            role: user.role,
-          });
-        }
+          },
+              })
       } catch (e) {
         console.error("❌ Password comparison error:", e.message);
         return res.status(500).json({ error: "COMPARE_FAILED" });
@@ -165,7 +190,11 @@ app.post("/login", (req, res) => {
 });
 
 //get all users
-app.get("/users", (req, res) => {
+app.get("/users",verifyToken, (req, res) => {
+
+  if(req.user.role !=='admin'){
+    return res.status(403).json({ error: "Forbidden" });
+  }
   con.query("SELECT * FROM users", (err, result) => {
     if (err) {
       console.error("❌ Select error:", err.code, err.message);
@@ -176,9 +205,12 @@ app.get("/users", (req, res) => {
 });
 
 //get specific user
-app.get("/users/:id", (req, res) => {
-  const userID = req.params.id;
-
+app.get("/users/:id",verifyToken, (req, res) => {
+  const userID = Number(req.params.id);
+  const id= Number(req.user.sub || req.user.id);
+if(userID!==id){
+      return res.status(403).json({ error: "Forbidden" });
+}
   con.query("SELECT * FROM users WHERE id=?", [userID], (err, result) => {
     if (err) {
       console.error("❌ Select error:", err.code, err.message);
@@ -206,8 +238,15 @@ app.post("/users", (req, res) => {
   );
 });
 
-app.delete("/users/:id", (req, res) => {
-  const ID = req.params.id;
+app.delete("/users/:id", verifyToken,(req, res) => {
+  const ID = Number(req.params.id);           
+  const authId   = Number(req.user.sub || req.user.id);
+  const isAdmin  = req.user.role === "admin";
+
+if(authId!==ID && !isAdmin){
+  return res.status(403).json({error:"Forbidden"} )
+}
+
 
   con.query("DELETE FROM users WHERE id=?", [ID], (err, result) => {
     if (err) {
@@ -258,13 +297,9 @@ app.get("/users/:id/games", (req, res) => {
   );
 });
 
-app.post("/games", (req, res) => {
-  const { users_id } = req.body;
-
-  if (!users_id) {
-    return res.status(400).json({ error: "user_id is required" });
-  }
-
+app.post("/games",verifyToken, (req, res) => {
+const users_id = req.user.id;
+  
   con.query(
     "INSERT INTO games (users_id, status, start_time) VALUES (?, 'ongoing', NOW())",
     [users_id],

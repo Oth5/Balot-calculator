@@ -86,95 +86,101 @@
           </tbody>
         </table>
       </div>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script>
-      const API_URL = window.location.hostname.includes("localhost")
-        ? "http://localhost:3000" // لو تشغل محلي
-        : "https://balot-calculator-production.up.railway.app"; // لو على Railway
+    </div><script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+  const API_URL = window.location.hostname.includes("localhost")
+    ? "http://localhost:3000"
+    : "https://balot-calculator-production.up.railway.app";
 
-      function readId() {
-        const id = new URLSearchParams(location.search).get("users_id");
-        return id;
+  const token = localStorage.getItem("authToken");
+  if (!token) {
+    window.location.href = "login.html";
+  } else {
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+  }
+
+  async function loadGames() {
+    const tbody = document.getElementById("gamesTable");
+    tbody.innerHTML = "<tr><td colspan='4'>جارِ التحميل...</td></tr>";
+
+    try {
+      // ✅ بدون users_id من الرابط — السيرفر يعرف المستخدم من التوكن
+      const { data: games } = await axios.get(`${API_URL}/me/games`);
+
+      if (!Array.isArray(games) || games.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='4'>لا يوجد جلسات</td></tr>";
+        return;
       }
 
-      async function loadgames() {
-        const tbody = document.getElementById("gamesTable");
-        const id = readId();
+      const rows = games.map(g => `
+        <tr>
+          <td>${g.id}</td>
+          <td>${g.status}</td>
+          <td>${
+            g.start_time
+              ? new Date(g.start_time).toLocaleString("ar-EG", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  month: "long",
+                  day: "2-digit",
+                })
+              : "-"
+          }</td>
+          <td><button class="btn" onclick="goPlay(${g.id})">الانتقال إلى اللعب</button></td>
+        </tr>
+      `).join("");
 
-        tbody.innerHTML = "<tr><td colspan='4'>جار التحميل...</td></tr>";
+      tbody.innerHTML = rows;
+    } catch (e) {
+      console.error(e?.response?.data || e);
+      tbody.innerHTML = "<tr><td colspan='4'>تعذر جلب الجلسات</td></tr>";
+      if (e?.response?.status === 401) window.location.href = "login.html";
+    }
+  }
 
-        try {
-          const d = await axios.get(`${API_URL}/users/${id}/games`);
-          const result = d.data;
-          if (result.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='4'>لايوجد جلسات</td></tr>";
-            return;
-          }
+  async function createGame() {
+    try {
+      const { data } = await axios.post(`${API_URL}/games`, {});
+      const newId = data?.game?.id;
+      if (!newId) throw new Error("No game id returned");
+      alert("تم إنشاء جلسة جديدة ✅");
+      window.location.href = `userpage.html?game_id=${encodeURIComponent(newId)}`;
+    } catch (e) {
+      console.error(e?.response?.data || e);
+      alert("خطأ في إنشاء جلسة جديدة");
+    }
+  }
 
-          const games = Array.isArray(result) ? result : [result];
-
-          const newtable = games
-            .map(
-              (e) =>
-                `
-            <tr>
-          <td>${e.id}</td>
-                    <td>${e.status}</td>
-             <td>${
-               e.start_time
-                 ? new Date(e.start_time).toLocaleString("ar-EG", {
-                     hour: "2-digit",
-                     minute: "2-digit",
-                     month: "long",
-                     day: "2-digit",
-                   })
-                 : "-"
-                }</td>
-     <td><button onclick="GoPlay(${e.id})">الانتقال الى اللعب </button></td>
-                </tr>`
-            
-            )
-            .join("");
-            tbody.innerHTML=newtable;
-        } catch (e) {
-          alert("خطأ في جلب القيم");
-          console.error(e, e.messege);
-        }
+  async function goPlay(id) {
+    try {
+      const { data } = await axios.get(`${API_URL}/games/${id}`);
+      if (data.status === "finished") {
+        alert("الصكة منتهية ولا يمكن اللعب عليها");
+        return;
       }
-      document.getElementById("refresh").addEventListener("click", loadgames);
+      window.location.href = `userpage.html?game_id=${encodeURIComponent(id)}`;
+    } catch (e) {
+      console.error(e?.response?.data || e);
+      alert("مشكلة في الانتقال");
+    }
+  }
 
-      async function creategames() {
-        const id = readId();
+  function logout() {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("authUser");
+    delete axios.defaults.headers.common["Authorization"];
+    window.location.href = "login.html";
+  }
 
-        try {
-          const d = await axios.post(`${API_URL}/games`, { users_id: id });
-          result = d.data;
-          await loadgames();
-          alert("تم اضافه صكه");
-          GoPlay(d.data.game.id);
-        } catch (e) {
-          console.error(e, e.code, e.messege);
-          alert("خطا في اضافه صكه جديده");
-        }
-      }
-      document.getElementById("newGame").addEventListener("click", creategames);
-      loadgames();
+  document.getElementById("refresh").addEventListener("click", loadGames);
+  document.getElementById("newGame").addEventListener("click", createGame);
+  document.getElementById("logout").addEventListener("click",logout);
 
-      async function GoPlay(id) {
-        try {
-          const d = await axios.get(`${API_URL}/games/${id}`);
-          if (d.data.status === "finished") {
-            alert("الصكه منتهيه ماتقدر توصل لها");
-            return;
-          }
+  loadGames();
 
-          window.location.href = `userpage.html?game_id=${encodeURIComponent(id)}`;
-        } catch (e) {
-          alert("مشكله في الانتقال");
-          console.error(e.code, e);
-        }
-      }
-    </script>
+ 
+</script>
+
   </body>
 </html>

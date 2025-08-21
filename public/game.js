@@ -2,6 +2,15 @@ const API_URL = window.location.hostname.includes("localhost")
   ? "http://localhost:3000" // لو تشغل محلي
   : "https://balot-calculator-production.up.railway.app"; // لو على Railway
 
+
+ const token = localStorage.getItem("authToken");
+  if (!token) {
+    window.location.href = "login.html";
+  } else {
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+  }
+
 const u = JSON.parse(localStorage.getItem("authUser") || "null");
 if (!u) location.href = "login.html";
 else if (u.role !== "admin") {
@@ -46,7 +55,7 @@ async function loadUsers() {
       .join("");
     tbody.innerHTML = tableshow;
   } catch (e) {
-    console.error(e);
+    console.error(e,e.message);
     tbody.innerHTML = `<tr><td colspan="3">تعذر تحميل المستخدمين</td></tr>`;
   }
 }

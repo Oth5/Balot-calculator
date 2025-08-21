@@ -10,7 +10,14 @@ function readId() {
   return id;
 }
 
-async function loadscores() {
+  const token = localStorage.getItem("authToken");
+  if (!token) {
+    window.location.href = "login.html";
+  } else {
+    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  }
+  
+  async function loadscores() {
   const lnaoutput = document.getElementById("lnaoutput");
   const lhmoutput = document.getElementById("lhmoutput");
 
@@ -107,7 +114,7 @@ async function newgame() {
       return;
     }
 
-    const res = await axios.post(`${API_URL}/games`, { users_id: userId });
+    const res = await axios.post(`${API_URL}/games`, {});
 
     alert("✅ تم إنهاء الصكه وإنشاء صكه جديدة");
     const newGameId = res.data.game.id;
