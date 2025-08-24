@@ -1,3 +1,4 @@
+
 const API_URL = window.location.hostname.includes("localhost")
   ? "http://localhost:3000" // لو تشغل محلي
   : "https://balot-calculator-production.up.railway.app"; // لو على Railway
@@ -172,12 +173,8 @@ async function loadGames() {
      : "-"
  }</td>
 <td>
-<button class="btn-outline-blue" onclick="ChangeState(${
-            r.id
-          })">تعديل الحاله</button>
-<button class="btn-outline-red" onclick="GoPlay(${
-            r.id
-          })">الانتقال الى اللعب</button>
+<button class="btn-outline-blue" onclick="ChangeState(${r.id})">تعديل الحاله</button>
+<button class="btn-outline-red" onclick="GoPlay(${r.id})">الانتقال الى اللعب</button>
 </td>
 </tr>
 `
@@ -213,33 +210,37 @@ async function addGame() {
 
 document.getElementById("createGameBtn").addEventListener("click", addGame);
 
-async function ChangeState(Id) {
-  const newStatus = prompt("أدخل الحالة الجديدة (مثال: ongoing أو finished):");
-
+async function ChangeState(id) {
+  let newStatus = prompt("أدخل الحالة الجديدة: ongoing أو finished");
   if (!newStatus) return;
 
+  newStatus = newStatus.trim().toLowerCase();
+
+    const gameId = Number(id);
+  if (!Number.isInteger(gameId)) {
+    alert("Game id غير صحيح");
+    return;
+  }
   try {
-    const { data } = await axios.patch(`${API_URL}/games/${Id}`, {
+    const { data } = await axios.patch(`${API_URL}/games/${id}`, {
       status: newStatus,
     });
-
     alert(`✅ تم تحديث الحالة إلى "${data.status}"`);
-    loadGames();
+    await loadGames();
   } catch (err) {
-    console.error(err);
+    console.error(err?.response?.data || err);
     alert("❌ تعذر تعديل الحالة");
   }
 }
 
 async function GoPlay(id) {
+const {data}= await axios.get(`${API_URL}/games/${id}`)
+const status= data.status
+if(status==='finished'){
+  return alert('الصكه منتهيه.')
+}
   try {
-    const d = await axios.get(`${API_URL}/games/${id}`);
-    if (d.data.status === "finished") {
-      alert("الصكه منتهيه ماتقدر توصل لها");
-      return;
-    }
-
-    window.location.href = `index.html?game_id=${encodeURIComponent(id)}`;
+    window.location.href = `index.html`;
   } catch (e) {
     alert("مشكله في الانتقال");
     console.error(e.code, e);

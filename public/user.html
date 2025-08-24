@@ -127,7 +127,7 @@
                 })
               : "-"
           }</td>
-          <td><button class="btn" onclick="goPlay(${g.id})">الانتقال إلى اللعب</button></td>
+          <td><button class="btn" onclick="goPlay()">الانتقال إلى اللعب</button></td>
         </tr>
       `).join("");
 
@@ -141,25 +141,32 @@
 
   async function createGame() {
     try {
+      try{
+  await axios.patch(`${API_URL}/games`, { status: "finished" });
+} catch (err) {
+      const code = err?.response?.status;
+      if (code && code !== 404) throw err; 
+}
+
       const { data } = await axios.post(`${API_URL}/games`, {});
       const newId = data?.game?.id;
       if (!newId) throw new Error("No game id returned");
       alert("تم إنشاء جلسة جديدة ✅");
-      window.location.href = `userpage.html?game_id=${encodeURIComponent(newId)}`;
+      window.location.href = `userpage.html`;
     } catch (e) {
       console.error(e?.response?.data || e);
       alert("خطأ في إنشاء جلسة جديدة");
     }
   }
 
-  async function goPlay(id) {
+  async function goPlay() {
     try {
-      const { data } = await axios.get(`${API_URL}/games/${id}`);
+      const { data } = await axios.get(`${API_URL}/me/games/`,{});
       if (data.status === "finished") {
         alert("الصكة منتهية ولا يمكن اللعب عليها");
         return;
       }
-      window.location.href = `userpage.html?game_id=${encodeURIComponent(id)}`;
+      window.location.href = `userpage.html`;
     } catch (e) {
       console.error(e?.response?.data || e);
       alert("مشكلة في الانتقال");

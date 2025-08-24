@@ -77,6 +77,13 @@
       background: #ddd;
     }
 
+     .login {
+        display: block;
+        margin-top: 15px;
+        color: #f0f0f0;
+        text-decoration: none;
+        font-size: 14px;
+      }
   </style>
   <!-- مكتبة أيقونات -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -94,6 +101,8 @@
       <input type="password" id="password" placeholder="Password">
     </div>
     <button class="signup-btn" id="signup">SIGN UP</button>
+          <a href="login.html" class="login">login</a>
+
   </div>
 
 
@@ -112,15 +121,19 @@ const API_URL = window.location.hostname.includes("localhost")
       alert('Please fill in all fields');
       return;
     }
-
-    try {
-      const response = await axios.post(`${API_URL}/register`, { username, password });
-      alert(response.data.message);
-      window.location.href = 'login.html'; // إعادة التوجيه إلى صفحة تسجيل الدخول
-    } catch (error) {
-      console.log(error.message);
-      alert('Error during registration. Please try again.'+error);
-    }
+if(password.length<5){
+  alert("الرقم السري اقل من 5 خانات")
+  return;
+}
+   try {
+  const response = await axios.post(`${API_URL}/register`, { username, password });
+  alert(response.data.message);
+  window.location.href = 'login.html';
+} catch (error) {
+  const msg = error?.response?.data?.error || error.message || 'Unknown error';
+  alert('خطأ في التسجيل: ' + msg);
+  console.error(error?.response?.data || error);
+}
 }
 document.getElementById('signup').addEventListener('click', signup);
 

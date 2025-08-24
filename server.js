@@ -10,6 +10,7 @@ dotenv.config();
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
   res.redirect("/login.html");
@@ -69,7 +70,6 @@ console.log("DB CONFIG =>", {
   database: process.env.MYSQLDATABASE,
 });
 
-
 app.get("/", (req, res) => {
   res.send("✅ Balot Calculator API is running!");
 });
@@ -87,19 +87,10 @@ app.get("/me", verifyToken, (req, res) => {
   });
 });
 
-app.get("/me/games", verifyToken, (req, res) => {
-  con.query(
-    "SELECT * FROM games WHERE users_id = ? ORDER BY id DESC",
-    [req.user.id],
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: err.code });
-      res.json(rows);
-    }
-  );
-});
 //auth register signup
 app.post("/register", async (req, res) => {
-  const { username, password } = req.body;
+  try{
+  let { username, password } = req.body;
 
   if (!username || !password) {
     return res
@@ -107,9 +98,24 @@ app.post("/register", async (req, res) => {
       .json({ error: "Username and password are required" });
   }
 
-  try {
-    const hash = await bcrypt.hash(password, 10);
+    username = username.trim();
 
+con.query("SELECT id FROM users WHERE username=? LIMIT 1",[username],async(err,result)=>{
+
+    if (err) {
+          console.error("❌ Select user error:", err);
+          return res.status(500).json({ error: err.code });
+        }
+        if (result.length) {
+          return res.status(409).json({ error: "اسم المستخدم موجود مسبقا" });
+        };
+let hash;
+ try{
+     hash = await bcrypt.hash(password, 10);
+ }catch(e){
+        console.error("❌ Hashing error:", e.message);
+        return res.status(500).json({ error: "Hashing failed", message: e.message });
+ }
     con.query(
       "INSERT INTO users (username, password) VALUES (?, ?)",
       [username, hash],
@@ -128,6 +134,7 @@ app.post("/register", async (req, res) => {
         });
       }
     );
+    });
   } catch (err) {
     console.error("❌ Hashing error:", err.message);
     res.status(500).json({ error: "Hashing failed", message: err.message });
@@ -170,17 +177,18 @@ app.post("/login", (req, res) => {
           role: user.role,
         };
 
-        const token= jwt.sign(payload, JWT_SECRET,{expiresIn:'30m'});
+        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "30m" });
 
-      return res.json({
-        message:`✅ Login successful (${user.role})`,
-        token,
-      user: {   //payload
+        return res.json({
+          message: `✅ Login successful (${user.role})`,
+          token,
+          user: {
+            //payload
             id: user.id,
             username: user.username,
             role: user.role,
           },
-              })
+        });
       } catch (e) {
         console.error("❌ Password comparison error:", e.message);
         return res.status(500).json({ error: "COMPARE_FAILED" });
@@ -190,9 +198,8 @@ app.post("/login", (req, res) => {
 });
 
 //get all users
-app.get("/users",verifyToken, (req, res) => {
-
-  if(req.user.role !=='admin'){
+app.get("/users", verifyToken, (req, res) => {
+  if (req.user.role !== "admin") {
     return res.status(403).json({ error: "Forbidden" });
   }
   con.query("SELECT * FROM users", (err, result) => {
@@ -205,12 +212,12 @@ app.get("/users",verifyToken, (req, res) => {
 });
 
 //get specific user
-app.get("/users/:id",verifyToken, (req, res) => {
+app.get("/users/:id", verifyToken, (req, res) => {
   const userID = Number(req.params.id);
-  const id= Number(req.user.sub || req.user.id);
-if(userID!==id){
-      return res.status(403).json({ error: "Forbidden" });
-}
+  const id = Number(req.user.sub || req.user.id);
+  if (userID !== id) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
   con.query("SELECT * FROM users WHERE id=?", [userID], (err, result) => {
     if (err) {
       console.error("❌ Select error:", err.code, err.message);
@@ -238,15 +245,14 @@ app.post("/users", (req, res) => {
   );
 });
 
-app.delete("/users/:id", verifyToken,(req, res) => {
-  const ID = Number(req.params.id);           
-  const authId   = Number(req.user.sub || req.user.id);
-  const isAdmin  = req.user.role === "admin";
+app.delete("/users/:id", verifyToken, (req, res) => {
+  const ID = Number(req.params.id);
+  const authId = Number(req.user.sub || req.user.id);
+  const isAdmin = req.user.role === "admin";
 
-if(authId!==ID && !isAdmin){
-  return res.status(403).json({error:"Forbidden"} )
-}
-
+  if (authId !== ID && !isAdmin) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
 
   con.query("DELETE FROM users WHERE id=?", [ID], (err, result) => {
     if (err) {
@@ -263,7 +269,7 @@ if(authId!==ID && !isAdmin){
 
 //get all games
 app.get("/games", (req, res) => {
-  con.query("SELECT * FROM games", (err, result) => {
+  con.query("SELECT * FROM games ORDER BY id DESC ", (err, result) => {
     if (err) {
       console.error("❌ Select error:", err.code, err.message);
       return res.status(500).json({ error: err.code });
@@ -286,10 +292,10 @@ app.get("/games/:id", (req, res) => {
 });
 
 // get user games
-app.get("/users/:id/games", (req, res) => {
+app.get("/me/games", verifyToken, (req, res) => {
   con.query(
-    "SELECT * FROM games WHERE users_id = ?",
-    [req.params.id],
+    "SELECT * FROM games WHERE users_id = ? ORDER BY id DESC",
+    [req.user.id],
     (err, rows) => {
       if (err) return res.status(500).json({ error: err.code });
       res.json(rows);
@@ -297,9 +303,9 @@ app.get("/users/:id/games", (req, res) => {
   );
 });
 
-app.post("/games",verifyToken, (req, res) => {
-const users_id = req.user.id;
-  
+app.post("/games", verifyToken, (req, res) => {
+  const users_id = req.user.id;
+
   con.query(
     "INSERT INTO games (users_id, status, start_time) VALUES (?, 'ongoing', NOW())",
     [users_id],
@@ -321,32 +327,57 @@ const users_id = req.user.id;
     }
   );
 });
+app.patch("/games",verifyToken, (req, res) => {
+  const { status } = req.body;
+  const userId = req.user?.id;
 
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
+
+  if (!["ongoing", "finished"].includes(status)) {
+    return res.status(400).json({ error: "Invalid status. Must be 'ongoing' or 'finished'." });
+  }
+
+    con.query(
+    "SELECT id FROM games WHERE users_id=? AND status='ongoing' ORDER BY id DESC LIMIT 1",
+    [userId],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.code });
+
+      if (!rows.length) {
+        // ما فيه جلسة جارية لهذا المستخدم
+        return res.status(404).json({ message: "No ongoing game" });
+      }
+
+            const gameId = rows[0].id;
+
+  con.query(
+    "UPDATE games SET status=? WHERE id=?",
+    [status,gameId
+    ],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err.code });
+      if (!result.affectedRows) return res.status(404).json({ message: "No ongoing game" });
+      res.json({ message: "✅ Current game updated", status });
+    }
+  );
+});
+});
 app.patch("/games/:id", (req, res) => {
-  const ID = req.params.id;
+    const gameId = Number(req.params.id);
   const { status } = req.body;
 
-  // تحقق أن القيمة إما ongoing أو finished
   if (!["ongoing", "finished"].includes(status)) {
-    return res.status(400).json({
-      error: "Invalid status. Must be 'ongoing' or 'finished'.",
-    });
+    return res.status(400).json({ error: "Invalid status. Must be 'ongoing' or 'finished'." });
   }
 
   con.query(
-    "UPDATE games SET status = ? WHERE id = ?",
-    [status, ID],
+    "UPDATE games SET status=? WHERE id=?" ,
+    [status,gameId
+    ],
     (err, result) => {
-      if (err) {
-        console.error("❌ Update error:", err.code);
-        return res.status(500).json({ error: err.code });
-      }
-
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ message: "Game not found" });
-      }
-
-      res.json({ message: "Game updated successfully", id: ID, status });
+      if (err) return res.status(500).json({ error: err.code });
+      if (!result.affectedRows===0) return res.status(404).json({ message: "No ongoing game" });
+      res.json({ message: "✅ Current game updated", status });
     }
   );
 });
@@ -359,52 +390,64 @@ app.get("/scores", (req, res) => {
     }
     res.json(result);
   });
+  
 });
 
 //get scores by id
-app.get("/scores/:game_id", (req, res) => {
-  const gameId = req.params.game_id;
-
+app.get("/scores/current", verifyToken, (req, res) => {
+  const userId = req.user.id;
   con.query(
-    "SELECT * FROM scores WHERE game_id=? ORDER BY id ASC",
-    [gameId],
-    (err, result) => {
-      if (err) {
-        console.log("Error Get Scores", err.code);
-        return res.status(500).json({ error: err.code });
-      }
-      res.json(result);
+    "SELECT id FROM games WHERE users_id=? AND status='ongoing' ORDER BY id DESC LIMIT 1",
+    [userId],
+    (e, grows) => {
+      if (e) return res.status(500).json({ error: e.code });
+      if (!grows.length) return res.json([]);
+      const gameId = grows[0].id;
+      con.query(
+        "SELECT * FROM scores WHERE game_id=? ORDER BY id ASC",
+        [gameId],
+        (e2, srows) => {
+          if (e2) return res.status(500).json({ error: e2.code });
+          res.json(srows);
+        }
+      );
     }
   );
 });
 
 // POST: إضافة سكور جديد
-app.post("/scores", (req, res) => {
-  const { game_id, team, score } = req.body;
+app.post("/scores/current", verifyToken, (req, res) => {
+  const { team, score } = req.body;
+  const userId = req.user.id;
 
-  // التحقق من القيم
-  if (!game_id || !team || score === undefined) {
-    return res.status(400).json({
-      error: "game_id, team, score are required",
-    });
+  if (!team || score === undefined) {
+    return res.status(400).json({ error: "team, score are required" });
   }
 
   con.query(
-    "INSERT INTO scores (game_id, team, score) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE score = VALUES(score) ",
-    [game_id, team, score],
-    (err, result) => {
-      if (err) {
-        console.error("❌ Insert score error:", err.code, err.message);
-        return res.status(500).json({ error: err.code });
-      }
+    "SELECT id FROM games WHERE users_id=? AND status='ongoing' ORDER BY id DESC LIMIT 1",
+    [userId],
+    (e, rows) => {
+      if (e) return res.status(500).json({ error: e.code });
+      if (!rows.length)
+        return res.status(404).json({ error: "No ongoing game" });
 
-      res.status(201).json({
-        message: "✅ Score added successfully",
-        id: result.insertId,
-        game_id,
-        team,
-        score,
-      });
+      const gameId = rows[0].id;
+      con.query(
+        "INSERT INTO scores (game_id, team, score) VALUES (?, ?, ?) " +
+          "ON DUPLICATE KEY UPDATE score = VALUES(score)",
+        [gameId, String(team), Number(score)],
+        (e2) => {
+          if (e2) return res.status(500).json({ error: e2.code });
+
+          res.status(201).json({
+            message: "✅ Score added successfully",
+            game_id: gameId,
+            team: String(team),
+            score: Number(score),
+          });
+        }
+      );
     }
   );
 });
